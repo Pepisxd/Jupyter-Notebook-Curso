@@ -1,20 +1,26 @@
 import "./App.css";
-import Navbar from "./components/navbar";
-import Hero from "./components/hero";
-import Content from "./components/content-usage";
-import Characteristics from "./components/characteristics";
-import Faq from "./components/faq";
-import Footer from "./components/footer";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+
+import Home from "./pages/Home";
+import CourseContent from "./pages/CourseContent";
+import NotFound from "./pages/404";
 
 function App() {
   return (
     <>
-      <Navbar />
-      <Hero />
-      <Content />
-      <Characteristics />
-      <Faq />
-      <Footer />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/course-content" element={<CourseContent />} />
+          <Route path="/404" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/404" />} />
+        </Routes>
+      </Router>
     </>
   );
 }

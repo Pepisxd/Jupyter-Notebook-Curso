@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 const Navbar: React.FC = () => {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleDrawer = () => {
@@ -26,11 +28,13 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto flex items-center justify-between">
         {/* Logo */}
         <div>
-          <img
-            src="src/assets/jupyter-logo.png"
-            alt="jupyter-logo"
-            className="h-10"
-          />
+          <a href="/" className="flex items-center space-x-2">
+            <img
+              src="src/assets/jupyter-logo.png"
+              alt="jupyter-logo"
+              className="h-10"
+            />
+          </a>
         </div>
 
         {/* Botón del menú hamburguesa (solo visible en móviles) */}
@@ -63,16 +67,32 @@ const Navbar: React.FC = () => {
             <ul className="flex flex-col space-y-6 mt-16 md:mt-0 md:flex-row md:space-y-0 md:space-x-8">
               <li>
                 <a
-                  href="#"
-                  className="jupyter-color hover:font-semibold transition-all duration-300 hover-underline-animation"
+                  href="/"
+                  className={`jupyter-color hover:font-semibold transition-all duration-300 hover-underline-animation "${
+                    location.pathname === "/" ? "disabled-link" : ""
+                  }"`}
+                  onClick={
+                    location.pathname === "/"
+                      ? (e) => e.preventDefault()
+                      : undefined
+                  }
                 >
                   Inicio
                 </a>
               </li>
               <li>
                 <a
-                  href="#"
-                  className="jupyter-color hover:font-semibold transition-all duration-300 hover-underline-animation"
+                  href="/course-content"
+                  className={`jupyter-color hover:font-semibold transition-all duration-300 hover-underline-animation "${
+                    location.pathname === "/course-content"
+                      ? "disabled-link"
+                      : ""
+                  }"`}
+                  onClick={
+                    location.pathname === "/course-content"
+                      ? (e) => e.preventDefault()
+                      : undefined
+                  }
                 >
                   Material
                 </a>
