@@ -30,9 +30,9 @@ const Faq: React.FC = () => {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className={`lucide lucide-chevron-down w-5 h-5 trnasition-transform focus:outline-none${
                     activeButton === "button1" ? "transform rotate-180" : ""
                   }`}
@@ -67,9 +67,9 @@ const Faq: React.FC = () => {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className={`lucide lucide-chevron-down w-5 h-5 trnasition-transform focus:outline-none${
                     activeButton === "button2" ? "transform rotate-180" : ""
                   }`}
@@ -102,9 +102,9 @@ const Faq: React.FC = () => {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className={`lucide lucide-chevron-down w-5 h-5 trnasition-transform focus:outline-none${
                     activeButton === "button3" ? "transform rotate-180" : ""
                   }`}
@@ -140,9 +140,9 @@ const Faq: React.FC = () => {
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className={`lucide lucide-chevron-down w-5 h-5 trnasition-transform focus:outline-none${
                     activeButton === "button4" ? "transform rotate-180" : ""
                   }`}

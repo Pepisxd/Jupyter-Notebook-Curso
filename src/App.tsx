@@ -6,22 +6,39 @@ import {
   Navigate,
 } from "react-router-dom";
 
+import { AuthProvider } from "./auth/auth-context";
+import { AuthModalProvider } from "./auth/auth-modal-context";
+
 import Home from "./pages/Home";
 import CourseContent from "./pages/CourseContent";
 import NotFound from "./pages/404";
+import AuthModals from "./auth/auth-modals";
+import ProtectedRoute from "./components/protectedRoute";
+import CourseForm from "../src/admin/courseForm";
 
 function App() {
   return (
-    <>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/course-content" element={<CourseContent />} />
-          <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/404" />} />
-        </Routes>
-      </Router>
-    </>
+    <AuthProvider>
+      <AuthModalProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/course-content" element={<CourseContent />} />
+            <Route path="*" element={<Navigate to="/404" />} />
+            <Route path="/404" element={<NotFound />} />
+            <Route
+              path="/admin/courses"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <CourseForm />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+          <AuthModals />
+        </Router>
+      </AuthModalProvider>
+    </AuthProvider>
   );
 }
 

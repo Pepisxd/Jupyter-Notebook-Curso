@@ -9,7 +9,6 @@ import {
   Search,
   Loader2,
   AlertTriangle,
-  Images,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -95,12 +94,20 @@ const CourseContent: React.FC = () => {
           <AlertTriangle className="w-16 h-16 text-[#FF5722] mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Error</h2>
           <p className="text-white/80 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-[#FF5722] hover:bg-[#FF5722]/90 text-white py-2 px-6 rounded-lg text-sm font-medium"
-          >
-            Intentar de nuevo
-          </button>
+          <div className="space-x-4 grid grid-cols-2 md:grid-cols-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-[#FF5722] hover:bg-[#FF5722]/90 text-white py-2 px-6 rounded-lg text-sm font-medium"
+            >
+              Intentar de nuevo
+            </button>
+            <button
+              onClick={() => window.location.replace("/")}
+              className="bg-[#FF5722] hover:bg-[#FF5722]/90 text-white py-2 px-6 rounded-lg text-sm font-medium"
+            >
+              Volver a la página de inicio
+            </button>
+          </div>
         </div>
       </div>
     );
