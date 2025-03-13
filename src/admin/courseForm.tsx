@@ -39,6 +39,35 @@ const CourseForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  const uploadFileToS3 = async (file: File, type: "Image" | "Video") => {
+    const token = localStorage.getItem("token");
+
+    const formData = new FormData();
+    formData.append(type, file);
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/courses/upload${type}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        return data.url;
+      } else {
+        throw new Error(data.msg || "Error al subir el archivo");
+      }
+    } catch (error) {
+      console.error("Error al subir el archivo:", error);
+    }
+  };
+
   if (!user || user.rol !== "admin") {
     return (
       <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -87,7 +116,7 @@ const CourseForm: React.FC = () => {
   });
 
   // Manejar la subida de imágenes
-  const handleImageUpload = (
+  const handleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     fieldName: string,
     index?: number
@@ -95,34 +124,45 @@ const CourseForm: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const imageUrl = reader.result as string;
+    try {
+      const type = fieldName === "thumbnail" ? "Image" : "Video"; // Determina el tipo de archivo
+      const url = await uploadFileToS3(file, type); // Subir el archivo
 
       if (fieldName === "image") {
-        setPreviewImage(imageUrl);
+        setPreviewImage(url); // Actualizar la vista previa de la imagen del curso
       } else if (fieldName === "thumbnail" && index !== undefined) {
         setLessonPreviews((prev) => ({
           ...prev,
-          [index]: imageUrl,
+          [index]: url, // Actualizar la vista previa de la miniatura de la lección
         }));
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error al subir la imagen:", error);
+    }
   };
 
   // Manejar el envío del formulario
   const onSubmit = async (data: CourseFormData) => {
     setIsSubmitting(true);
 
-    const token = localStorage.getItem("token"); // Obtén el token del localStorage
-
     try {
+      if (previewImage) {
+        data.image = previewImage;
+      }
+
+      for (let i = 0; i < data.lessons.length; i++) {
+        const lesson = data.lessons[i];
+        if (lessonPreviews[i]) {
+          lesson.thumbnail = lessonPreviews[i];
+        }
+      }
+      const token = localStorage.getItem("token");
+
       const response = await fetch("http://localhost:3000/api/courses", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Incluye el token en el header
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(data),
       });
@@ -138,10 +178,10 @@ const CourseForm: React.FC = () => {
           setLessonPreviews({});
         }, 3000);
       } else {
-        throw new Error(result.msg || "Error al crear o actualizar el curso");
+        throw new Error(result.msg || "Error al crear el curso");
       }
     } catch (error) {
-      console.error("Error al enviar el formulario:", error);
+      console.error("Error al crear el curso:", error);
     } finally {
       setIsSubmitting(false);
     }
