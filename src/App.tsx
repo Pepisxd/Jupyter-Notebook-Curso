@@ -14,7 +14,8 @@ import CourseContent from "./pages/CourseContent";
 import NotFound from "./pages/404";
 import AuthModals from "./auth/auth-modals";
 import ProtectedRoute from "./components/protectedRoute";
-import CourseForm from "../src/admin/courseForm";
+
+import ContentManager from "./admin/contentManager";
 
 function App() {
   return (
@@ -30,7 +31,7 @@ function App() {
               path="/admin/courses"
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <CourseForm />
+                  <ContentManager />
                 </ProtectedRoute>
               }
             />

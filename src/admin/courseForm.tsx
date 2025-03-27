@@ -42,6 +42,10 @@ const CourseForm: React.FC = () => {
   const uploadFileToS3 = async (file: File, type: "Image" | "Video") => {
     const token = localStorage.getItem("token");
 
+    if (!token) {
+      throw new Error("No se ha proporcionado un token de autenticación");
+    }
+
     const formData = new FormData();
     formData.append(type, file);
 
@@ -65,6 +69,7 @@ const CourseForm: React.FC = () => {
       }
     } catch (error) {
       console.error("Error al subir el archivo:", error);
+      throw error;
     }
   };
 
@@ -125,7 +130,8 @@ const CourseForm: React.FC = () => {
     if (!file) return;
 
     try {
-      const type = fieldName === "thumbnail" ? "Image" : "Video"; // Determina el tipo de archivo
+      const type =
+        fieldName === "image" || fieldName === "thumbnail" ? "Image" : "Video";
       const url = await uploadFileToS3(file, type); // Subir el archivo
 
       if (fieldName === "image") {
