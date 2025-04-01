@@ -19,59 +19,101 @@ interface Lesson {
   description: string;
   duration: string;
   videoUrl: string;
-  thumbnail?: string;
+  thumbnail: string;
   completed?: boolean;
   locked?: boolean;
 }
 
-interface Course {
-  id: number;
+interface Chapter {
+  id: string;
   title: string;
   description: string;
+  image?: string;
   lessons: Lesson[];
 }
 
 const CourseContent: React.FC = () => {
   // Estados
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [activeModule, setActiveModule] = useState<Course | null>(null);
+  const [activeChapter, setActiveChapter] = useState<Chapter | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
 
-  // Cargar datos de cursos
+  // Cargar datos de capítulos
   useEffect(() => {
-    axios
-      .get("http://localhost:3000/api/courses")
-      .then((res) => {
-        const coursesData = res.data;
-        setCourses(coursesData);
-        console.log(coursesData);
+    const token = localStorage.getItem("token");
+    console.log("Token encontrado:", token ? "Sí" : "No");
 
-        // Establecer el módulo y lección activos inicialmente
-        if (coursesData.length > 0) {
-          setActiveModule(coursesData[0]);
-          if (coursesData[0].lessons && coursesData[0].lessons.length > 0) {
-            setActiveLesson(coursesData[0].lessons[0]);
+    if (!token) {
+      setError("Debes iniciar sesión para ver el contenido");
+      setLoading(false);
+      return;
+    }
+
+    console.log("Haciendo petición a la API...");
+    axios
+      .get("http://localhost:3000/api/courses", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        console.log("Respuesta de la API:", res.data);
+        const chaptersData = res.data;
+
+        if (Array.isArray(chaptersData)) {
+          console.log("Número de capítulos recibidos:", chaptersData.length);
+          chaptersData.forEach((chapter, index) => {
+            console.log(`Capítulo ${index + 1}:`, {
+              id: chapter.id,
+              title: chapter.title,
+              lessonsCount: chapter.lessons?.length || 0,
+            });
+          });
+        } else {
+          console.log("Los datos no son un array:", typeof chaptersData);
+        }
+
+        setChapters(chaptersData);
+
+        if (chaptersData.length > 0) {
+          console.log("Estableciendo capítulo activo:", chaptersData[0].title);
+          setActiveChapter(chaptersData[0]);
+          if (chaptersData[0].lessons && chaptersData[0].lessons.length > 0) {
+            console.log(
+              "Estableciendo lección activa:",
+              chaptersData[0].lessons[0].title
+            );
+            setActiveLesson(chaptersData[0].lessons[0]);
           }
+        } else {
+          console.log(
+            "No se encontraron capítulos para establecer como activos"
+          );
         }
 
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Error fetching courses", err);
+        console.error("Error completo al obtener capítulos:", err);
+        console.error("Detalles del error:", {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status,
+        });
         setError(
-          "No se pudieron cargar los cursos. Por favor, intenta de nuevo más tarde."
+          "No se pudo cargar el contenido. Por favor, intenta de nuevo más tarde."
         );
         setLoading(false);
       });
   }, []);
 
-  const filteredCourses = courses.filter(
-    (course) =>
-      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.lessons.some((lesson) =>
+  const filteredChapters = chapters.filter(
+    (chapter) =>
+      chapter.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      chapter.lessons.some((lesson) =>
         lesson.title.toLowerCase().includes(searchQuery.toLowerCase())
       )
   );
@@ -81,7 +123,7 @@ const CourseContent: React.FC = () => {
       <div className="min-h-screen bg-[#1E1E1E] text-white flex items-center justify-center">
         <div className="flex flex-col items-center">
           <Loader2 className="w-12 h-12 text-[#FF5722] animate-spin mb-4" />
-          <p className="text-xl">Cargando cursos...</p>
+          <p className="text-xl">Cargando contenido...</p>
         </div>
       </div>
     );
@@ -113,14 +155,15 @@ const CourseContent: React.FC = () => {
     );
   }
 
-  // Si no hay cursos disponibles
-  if (courses.length === 0) {
+  if (chapters.length === 0) {
     return (
       <div className="min-h-screen bg-[#1E1E1E] text-white flex items-center justify-center">
         <div className="bg-[#2A2A2A] p-8 rounded-xl max-w-md text-center">
-          <h2 className="text-2xl font-bold mb-2">No hay cursos disponibles</h2>
+          <h2 className="text-2xl font-bold mb-2">
+            No hay contenido disponible
+          </h2>
           <p className="text-white/80">
-            Vuelve más tarde para ver nuevos cursos.
+            Vuelve más tarde para ver nuevo contenido.
           </p>
         </div>
       </div>
@@ -129,7 +172,7 @@ const CourseContent: React.FC = () => {
 
   return (
     <>
-      <div className="bg-[#1E1E1E]  text-white">
+      <div className="bg-[#1E1E1E] text-white">
         <Navbar />
       </div>
       <div className="min-h-screen bg-[#1E1E1E] text-white">
@@ -137,7 +180,7 @@ const CourseContent: React.FC = () => {
           <div className="container-mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <h1 className="text-2xl md:text-3xl font-bold">
-                Material del Curso
+                Contenido del Curso
               </h1>
               <div className="relative w-full md:w-64">
                 <input
@@ -155,44 +198,47 @@ const CourseContent: React.FC = () => {
 
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Sidebar con nuestros modulos y lecciones */}
+            {/* Sidebar con capítulos y lecciones */}
             <div className="lg:col-span-1">
               <div className="bg-[#2A2A2A] rounded-xl overflow-hidden sticky top-8">
                 <div className="p-4 bg-[#333333]">
                   <h2 className="text-xl font-semibold">Contenido del curso</h2>
                   <p className="text-white/70 text-sm mt-1">
-                    {courses.length} {courses.length === 1 ? "curso" : "cursos"}{" "}
+                    {chapters.length}{" "}
+                    {chapters.length === 1 ? "capítulo" : "capítulos"}{" "}
                     disponibles
                   </p>
                 </div>
                 <div className="p-4 max-h-[70vh] overflow-y-auto">
-                  {filteredCourses.length > 0 ? (
-                    filteredCourses.map((course) => (
-                      <div key={course.id} className="mb-6">
+                  {filteredChapters.length > 0 ? (
+                    filteredChapters.map((chapter) => (
+                      <div key={chapter.id} className="mb-6">
                         <button
                           onClick={() => {
-                            setActiveModule(course);
-                            if (course.lessons && course.lessons.length > 0) {
-                              setActiveLesson(course.lessons[0]);
+                            setActiveChapter(chapter);
+                            if (chapter.lessons && chapter.lessons.length > 0) {
+                              setActiveLesson(chapter.lessons[0]);
                             }
                           }}
                           className={`flex justify-between items-center w-full text-left mb-2 ${
-                            activeModule?.id === course.id
+                            activeChapter?.id === chapter.id
                               ? "text-[#FF5722]"
                               : "text-white"
                           }`}
                         >
-                          <h3 className="font-medium">{course.title}</h3>
+                          <h3 className="font-medium">{chapter.title}</h3>
                           <ChevronRight
                             className={`w-4 h-4 transform transition-transform ${
-                              activeModule?.id === course.id ? "rotate-90" : ""
+                              activeChapter?.id === chapter.id
+                                ? "rotate-90"
+                                : ""
                             }`}
                           />
                         </button>
 
-                        {(activeModule?.id === course.id || searchQuery) && (
+                        {(activeChapter?.id === chapter.id || searchQuery) && (
                           <div className="ml-2 border-l-2 border-[#444444] pl-4 space-y-3">
-                            {course.lessons
+                            {chapter.lessons
                               .filter((lesson) =>
                                 searchQuery
                                   ? lesson.title
@@ -243,10 +289,11 @@ const CourseContent: React.FC = () => {
                 </div>
               </div>
             </div>
-            {/* Contenido principal con video y descripición */}
-            {activeLesson && activeModule && (
+
+            {/* Contenido principal con video y descripción */}
+            {activeLesson && activeChapter && (
               <div className="lg:col-span-2 space-y-6">
-                {/* Video Player*/}
+                {/* Video Player */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -269,27 +316,16 @@ const CourseContent: React.FC = () => {
                         </Link>
                       </div>
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <img
-                          src={
-                            activeLesson.thumbnail ||
-                            "/placeholder.svg?height=200&width=350" ||
-                            "./src/assets/placeholder.png"
-                          }
-                          alt={activeLesson.title}
-                          className="object-cover"
-                        />
-                        <a
-                          href={activeLesson.videoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors group"
-                        >
-                          <div className="w-16 h-16 rounded-full bg-[#FF5722] flex items-center justify-center transform group-hover:scale-110 transition-transform">
-                            <Play className="w-8 h-8 text-white ml-1" />
-                          </div>
-                        </a>
-                      </div>
+                      <video
+                        className="w-full h-full"
+                        controls
+                        controlsList="nodownload"
+                        playsInline
+                        poster={activeLesson.thumbnail}
+                      >
+                        <source src={activeLesson.videoUrl} type="video/mp4" />
+                        Tu navegador no soporta el elemento de video.
+                      </video>
                     )}
                   </div>
 
@@ -300,7 +336,8 @@ const CourseContent: React.FC = () => {
                           {activeLesson.title}
                         </h2>
                         <p className="text-white/70 mt-1">
-                          Curso: {activeModule.title} • {activeLesson.duration}
+                          Capítulo: {activeChapter.title} •{" "}
+                          {activeLesson.duration}
                         </p>
                       </div>
                       {activeLesson.completed && (
@@ -315,15 +352,6 @@ const CourseContent: React.FC = () => {
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-4">
-                      <a
-                        href={activeLesson.videoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-[#FF5722] hover:bg-[#FF5722]/90 text-white py-2 px-6 rounded-lg text-sm font-medium inline-flex items-center gap-2"
-                      >
-                        <Play className="w-4 h-4" />
-                        Ver lección
-                      </a>
                       <button className="bg-white/10 hover:bg-white/20 text-white py-2 px-6 rounded-lg text-sm font-medium">
                         Marcar como completada
                       </button>
@@ -335,12 +363,12 @@ const CourseContent: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Lógica para encontrar la lección anterior */}
                   {(() => {
-                    const currentLessonIndex = activeModule.lessons.findIndex(
+                    const currentLessonIndex = activeChapter.lessons.findIndex(
                       (lesson) => lesson.id === activeLesson.id
                     );
                     if (currentLessonIndex > 0) {
                       const prevLesson =
-                        activeModule.lessons[currentLessonIndex - 1];
+                        activeChapter.lessons[currentLessonIndex - 1];
                       return (
                         <button
                           onClick={() => setActiveLesson(prevLesson)}
@@ -360,17 +388,17 @@ const CourseContent: React.FC = () => {
                         </button>
                       );
                     }
-                    return <div></div>; // Espacio vacío si no hay lección anterior
+                    return <div></div>;
                   })()}
 
                   {/* Lógica para encontrar la siguiente lección */}
                   {(() => {
-                    const currentLessonIndex = activeModule.lessons.findIndex(
+                    const currentLessonIndex = activeChapter.lessons.findIndex(
                       (lesson) => lesson.id === activeLesson.id
                     );
-                    if (currentLessonIndex < activeModule.lessons.length - 1) {
+                    if (currentLessonIndex < activeChapter.lessons.length - 1) {
                       const nextLesson =
-                        activeModule.lessons[currentLessonIndex + 1];
+                        activeChapter.lessons[currentLessonIndex + 1];
                       return (
                         <button
                           onClick={() => setActiveLesson(nextLesson)}
@@ -390,7 +418,7 @@ const CourseContent: React.FC = () => {
                         </button>
                       );
                     }
-                    return <div></div>; // Espacio vacío si no hay siguiente lección
+                    return <div></div>;
                   })()}
                 </div>
               </div>
