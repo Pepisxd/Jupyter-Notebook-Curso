@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import JupyterVideoPlayer from "../components/VideoPlayer/JupyterVideoPlayer";
 
 interface Lesson {
   id: string;
@@ -301,63 +302,56 @@ const CourseContent: React.FC = () => {
                   key={activeLesson.id}
                   className="bg-[#2A2A2A] rounded-xl overflow-hidden"
                 >
-                  <div className="relative aspect-video bg-black">
-                    {activeLesson.locked ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
-                        <Lock className="w-16 h-16 text-white" />
-                        <p className="text-white/70 mt-2">
-                          Esta lección está bloqueada
-                        </p>
-                        <Link
-                          to="/inscripcion"
-                          className="mt-4 bg-[#FF5722] hover:bg-[#FF5722]/90 text-white py-2 px-6 rounded-full text-sm font-medium"
-                        >
-                          Desbloquear Ahora
-                        </Link>
-                      </div>
-                    ) : (
-                      <video
-                        className="w-full h-full"
-                        controls
-                        controlsList="nodownload"
-                        playsInline
-                        poster={activeLesson.thumbnail}
+                  {activeLesson.locked ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
+                      <Lock className="w-16 h-16 text-white" />
+                      <p className="text-white/70 mt-2">
+                        Esta lección está bloqueada
+                      </p>
+                      <Link
+                        to="/inscripcion"
+                        className="mt-4 bg-[#FF5722] hover:bg-[#FF5722]/90 text-white py-2 px-6 rounded-full text-sm font-medium"
                       >
-                        <source src={activeLesson.videoUrl} type="video/mp4" />
-                        Tu navegador no soporta el elemento de video.
-                      </video>
+                        Desbloquear Ahora
+                      </Link>
+                    </div>
+                  ) : (
+                    <JupyterVideoPlayer
+                      src={activeLesson.videoUrl}
+                      thumbnail={activeLesson.thumbnail}
+                      title={activeLesson.title}
+                    />
+                  )}
+                </motion.div>
+
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h2 className="text-2xl font-bold">
+                        {activeLesson.title}
+                      </h2>
+                      <p className="text-white/70 mt-1">
+                        Capítulo: {activeChapter.title} •{" "}
+                        {activeLesson.duration}
+                      </p>
+                    </div>
+                    {activeLesson.completed && (
+                      <div className="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-xs font-medium">
+                        Completado
+                      </div>
                     )}
                   </div>
 
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h2 className="text-2xl font-bold">
-                          {activeLesson.title}
-                        </h2>
-                        <p className="text-white/70 mt-1">
-                          Capítulo: {activeChapter.title} •{" "}
-                          {activeLesson.duration}
-                        </p>
-                      </div>
-                      {activeLesson.completed && (
-                        <div className="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-xs font-medium">
-                          Completado
-                        </div>
-                      )}
-                    </div>
+                  <p className="text-white/80 leading-relaxed">
+                    {activeLesson.description}
+                  </p>
 
-                    <p className="text-white/80 leading-relaxed">
-                      {activeLesson.description}
-                    </p>
-
-                    <div className="mt-6 flex flex-wrap gap-4">
-                      <button className="bg-white/10 hover:bg-white/20 text-white py-2 px-6 rounded-lg text-sm font-medium">
-                        Marcar como completada
-                      </button>
-                    </div>
+                  <div className="mt-6 flex flex-wrap gap-4">
+                    <button className="bg-white/10 hover:bg-white/20 text-white py-2 px-6 rounded-lg text-sm font-medium">
+                      Marcar como completada
+                    </button>
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Navegación entre lecciones */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
