@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
 
 interface User {
   nombre: string;
@@ -8,23 +9,15 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  clearError: () => void;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -34,17 +27,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Verificar si estamos en el cliente antes de acceder a localStorage
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (error) {
-          console.error("Error parsing stored user", error);
-          localStorage.removeItem("user");
-        }
-      }
+    // Verificar si hay un token almacenado al cargar la aplicación
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Configurar el token en axios para todas las peticiones
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      // Obtener información del usuario
+      axios
+        .get("http://localhost:3000/api/auth/me")
+        .then((response) => {
+          setUser(response.data);
+        })
+        .catch(() => {
+          // Si hay error, limpiar el token inválido
+          localStorage.removeItem("token");
+          delete axios.defaults.headers.common["Authorization"];
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
       setLoading(false);
     }
   }, []);
@@ -53,31 +56,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("http://localhost:3000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem("token", data.token);
-        setUser({ nombre: data.nombre, email: data.email, rol: data.rol });
-      } else {
-        if (response.status === 400) {
-          throw new Error(
-            data.error || "Datos inválidos. Verifica tu correo y contraseña."
-          );
-        } else if (response.status === 404) {
-          throw new Error("El usuario no existe. Por favor, regístrate.");
-        } else {
-          throw new Error(data.error || "Error al iniciar sesión");
+      const response = await axios.post(
+        "http://localhost:3000/api/auth/login",
+        {
+          email,
+          password,
         }
-      }
-    } catch (error) {
-      console.error(error);
-      setError((error as Error).message);
+      );
+
+      const { token, nombre, email: userEmail, rol } = response.data;
+
+      // Guardar el token en localStorage
+      localStorage.setItem("token", token);
+
+      // Configurar el token en axios para todas las peticiones
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      // Actualizar el estado del usuario
+      setUser({ nombre, email: userEmail, rol });
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Error al iniciar sesión");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (name: string, email: string, password: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await axios.post("http://localhost:3000/api/auth/register", {
+        nombre: name,
+        email,
+        password,
+      });
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Error al registrar usuario");
       throw error;
     } finally {
       setLoading(false);
@@ -85,43 +100,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
+    // Limpiar el token y el estado del usuario
     localStorage.removeItem("token");
+    delete axios.defaults.headers.common["Authorization"];
     setUser(null);
   };
 
-  const register = async (nombre: string, email: string, password: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch("http://localhost:3000/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, email, password }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        alert("Usuario registrado correctamente");
-      } else {
-        throw new Error(data.error || "Error al registrar usuario");
-      }
-    } catch (error) {
-      console.error(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        register,
+        logout,
+        isAuthenticated: !!user,
+        loading,
+        error,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
-  const clearError = () => setError(null);
-
-  const value = {
-    user,
-    loading,
-    error,
-    login,
-    register,
-    logout,
-    clearError,
-  };
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth debe ser usado dentro de un AuthProvider");
+  }
+  return context;
 };

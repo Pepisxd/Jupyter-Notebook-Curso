@@ -1,45 +1,15 @@
 import "./App.css";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-} from "react-router-dom";
-
+import { BrowserRouter as Router } from "react-router-dom";
 import { AuthProvider } from "./auth/auth-context";
-import { AuthModalProvider } from "./auth/auth-modal-context";
-
-import Home from "./pages/Home";
-import CourseContent from "./pages/CourseContent";
-import NotFound from "./pages/404";
-import AuthModals from "./auth/auth-modals";
-import ProtectedRoute from "./components/protectedRoute";
-
-import ContentManager from "./admin/contentManager";
+import AppRoutes from "./routes/AppRoutes";
 
 function App() {
   return (
-    <AuthProvider>
-      <AuthModalProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/course-content" element={<CourseContent />} />
-            <Route path="*" element={<Navigate to="/404" />} />
-            <Route path="/404" element={<NotFound />} />
-            <Route
-              path="/admin/courses"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <ContentManager />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-          <AuthModals />
-        </Router>
-      </AuthModalProvider>
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </Router>
   );
 }
 

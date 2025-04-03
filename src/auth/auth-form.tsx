@@ -39,7 +39,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   }>({});
 
   // Obtener funciones de autenticación del contexto
-  const { login, register, loading, error, clearError } = useAuth();
+  const { login, register, loading, error } = useAuth();
   const { openModal, closeModal } = useAuthModal();
 
   // Validar el formulario
@@ -103,7 +103,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   // Manejar envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
 
     if (!validateForm()) {
       return;
