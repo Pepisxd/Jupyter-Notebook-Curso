@@ -7,6 +7,7 @@ import CourseContent from "../pages/CourseContent";
 import NotFound from "../pages/404";
 import AuthModals from "../auth/auth-modals";
 import ContentManager from "../admin/contentManager";
+import ChatInterface from "../pages/ChatPage";
 
 const AppRoutes = () => {
   return (
@@ -23,6 +24,7 @@ const AppRoutes = () => {
         />
         <Route path="*" element={<Navigate to="/404" />} />
         <Route path="/404" element={<NotFound />} />
+        <Route path="/chat" element={<ChatInterface />} />
         <Route
           path="/admin/courses"
           element={
