@@ -28,3 +28,4 @@ dist-ssr
 #Large media files 
 hero-video.mp4
 hero-video.webm.env
+.env
